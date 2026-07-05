@@ -1,6 +1,6 @@
 import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, obfuscationJobs, ObfuscationJob, InsertObfuscationJob } from "../drizzle/schema";
+import { InsertUser, users, obfuscationJobs, ObfuscationJob, InsertObfuscationJob, obfuscationLogs, ObfuscationLog, InsertObfuscationLog } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -154,4 +154,31 @@ export async function deleteObfuscationJob(jobId: number): Promise<void> {
   }
 
   await db.delete(obfuscationJobs).where(eq(obfuscationJobs.id, jobId));
+}
+
+// Obfuscation log helpers
+
+export async function getObfuscationLogsByJobId(jobId: number): Promise<ObfuscationLog[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get logs: database not available");
+    return [];
+  }
+
+  return db
+    .select()
+    .from(obfuscationLogs)
+    .where(eq(obfuscationLogs.jobId, jobId))
+    .orderBy(desc(obfuscationLogs.createdAt));
+}
+
+export async function bulkCreateObfuscationLogs(logs: InsertObfuscationLog[]): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  if (logs.length === 0) return;
+
+  await db.insert(obfuscationLogs).values(logs);
 }

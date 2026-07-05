@@ -47,3 +47,17 @@ export const obfuscationJobs = mysqlTable("obfuscation_jobs", {
 
 export type ObfuscationJob = typeof obfuscationJobs.$inferSelect;
 export type InsertObfuscationJob = typeof obfuscationJobs.$inferInsert;
+
+export const obfuscationLogs = mysqlTable("obfuscation_logs", {
+  id: int("id").autoincrement().primaryKey(),
+  jobId: int("jobId").notNull().references(() => obfuscationJobs.id),
+  fileType: varchar("fileType", { length: 50 }).notNull(), // 'asset', 'class', 'lib'
+  originalName: varchar("originalName", { length: 512 }).notNull(),
+  obfuscatedName: varchar("obfuscatedName", { length: 512 }).notNull(),
+  filePath: varchar("filePath", { length: 512 }),
+  fileSize: int("fileSize"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type ObfuscationLog = typeof obfuscationLogs.$inferSelect;
+export type InsertObfuscationLog = typeof obfuscationLogs.$inferInsert;

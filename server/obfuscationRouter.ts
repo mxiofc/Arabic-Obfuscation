@@ -10,6 +10,8 @@ import {
   getObfuscationJobById,
   getUserObfuscationJobs,
   updateObfuscationJob,
+  getObfuscationLogsByJobId,
+  bulkCreateObfuscationLogs,
 } from './db';
 import { storagePut, storageGet } from './storage';
 import { processApkFile, ObfuscationOptions } from './apkProcessor';
@@ -148,6 +150,32 @@ export const obfuscationRouter = router({
         fileName: job.originalFileName.replace(/\.apk$/, '-obfuscated.apk'),
       };
     }),
+
+  /**
+   * Get obfuscation logs for a job
+   */
+  getLogs: protectedProcedure
+    .input(z.object({ jobId: z.number().int() }))
+    .query(async ({ input, ctx }) => {
+      const job = await getObfuscationJobById(input.jobId);
+
+      if (!job) {
+        throw new TRPCError({
+          code: 'NOT_FOUND',
+          message: 'Job not found',
+        });
+      }
+
+      // Verify ownership
+      if (job.userId !== ctx.user.id) {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Access denied',
+        });
+      }
+
+      return getObfuscationLogsByJobId(input.jobId);
+    }),
 });
 
 /**
@@ -185,6 +213,19 @@ async function processApkAsync(
       result.obfuscatedBuffer,
       'application/vnd.android.package-archive'
     );
+
+    // Save obfuscation logs
+    if (result.fileLogs && result.fileLogs.length > 0) {
+      const logs = result.fileLogs.map(log => ({
+        jobId,
+        fileType: log.fileType as 'asset' | 'class' | 'lib',
+        originalName: log.originalName,
+        obfuscatedName: log.obfuscatedName,
+        filePath: log.filePath,
+        fileSize: log.fileSize,
+      }));
+      await bulkCreateObfuscationLogs(logs);
+    }
 
     // Mark job as completed
     await updateObfuscationJob(jobId, {

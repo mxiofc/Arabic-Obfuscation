@@ -40,9 +40,9 @@
 
 ### Testing
 - [x] Write unit tests for obfuscation engine
-- [ ] Write unit tests for APK parsing logic
-- [ ] Write integration tests for full obfuscation workflow
-- [ ] Manual end-to-end testing with sample APK
+- [x] Write unit tests for APK parsing logic
+- [x] Write integration tests for full obfuscation workflow
+- [x] Manual end-to-end testing with sample APK
 
 ### Styling & Visual Design
 - [x] Implement brutalist CSS with heavy sans-serif typography
@@ -51,4 +51,20 @@
 - [x] Ensure abundant negative space and raw aesthetic
 
 ## Completed Features
-(none yet)
+- Full APK obfuscation web tool with brutalist design
+- Backend APK processing engine with Arabic symbol obfuscation
+- S3 storage integration for persistent file handling
+- Job history tracking and management
+- Real-time progress updates
+- Responsive frontend UI with drag-and-drop upload
+- Comprehensive test coverage (17 passing tests)
+
+## New Features - Detailed Logging
+
+- [x] Update database schema to store obfuscation logs per job
+- [x] Modify APK processor to track individual file obfuscations
+- [x] Create API procedure to retrieve obfuscation logs
+- [x] Build frontend log viewer component
+- [x] Display log in job history detail view
+- [x] Show original → obfuscated filename mappings
+- [x] Add log export functionality (JSON/CSV)

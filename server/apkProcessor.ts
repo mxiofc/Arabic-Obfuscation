@@ -29,16 +29,26 @@ export interface ProcessingStep {
   message: string;
 }
 
+export interface ObfuscationFileLog {
+  fileType: 'asset' | 'class' | 'lib';
+  originalName: string;
+  obfuscatedName: string;
+  filePath?: string;
+  fileSize?: number;
+}
+
 export interface ApkProcessingResult {
   success: boolean;
   obfuscatedBuffer?: Buffer;
   stats?: ObfuscationStats;
   error?: string;
   steps: ProcessingStep[];
+  fileLogs?: ObfuscationFileLog[];
 }
 
 export class ApkProcessor {
   private steps: ProcessingStep[] = [];
+  private fileLogs: ObfuscationFileLog[] = [];
   private tempDir: string;
 
   constructor() {
@@ -105,6 +115,7 @@ export class ApkProcessor {
         obfuscatedBuffer,
         stats,
         steps: this.steps,
+        fileLogs: this.fileLogs,
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : String(error);
@@ -143,6 +154,16 @@ export class ApkProcessor {
 
       const obfuscatedPath = [...parts.slice(0, -1), obfuscatedFilename].join('/');
       assetMap.set(originalPath, obfuscatedPath);
+      
+      // Log the obfuscation
+      this.fileLogs.push({
+        fileType: 'asset',
+        originalName: filename,
+        obfuscatedName: obfuscatedFilename,
+        filePath: originalPath,
+        fileSize: entry.getData().length,
+      });
+      
       obfuscatedCount++;
     });
 
@@ -207,6 +228,16 @@ export class ApkProcessor {
 
       const obfuscatedPath = [...parts.slice(0, -1), obfuscatedFilename].join('/');
       libMap.set(originalPath, obfuscatedPath);
+      
+      // Log the obfuscation
+      this.fileLogs.push({
+        fileType: 'lib',
+        originalName: filename,
+        obfuscatedName: obfuscatedFilename,
+        filePath: originalPath,
+        fileSize: entry.getData().length,
+      });
+      
       obfuscatedCount++;
     });
 

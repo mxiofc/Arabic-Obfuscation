@@ -1,7 +1,8 @@
-import { Download, Loader2, AlertCircle, CheckCircle } from 'lucide-react';
+import { Loader2, Download, CheckCircle, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import type { ObfuscationJob } from '@/types/obfuscation';
 import { formatDistanceToNow } from 'date-fns';
+import { useLocation } from 'wouter';
 
 interface JobHistoryProps {
   jobs: ObfuscationJob[];
@@ -30,6 +31,8 @@ export function JobHistory({
   isDownloading = {},
   isLoading = false,
 }: JobHistoryProps) {
+  const [, navigate] = useLocation();
+
   if (isLoading) {
     return (
       <div className="border-4 border-black p-8 text-center">
@@ -82,25 +85,35 @@ export function JobHistory({
               </td>
               <td className="p-4 text-center">
                 {job.status === 'completed' && job.obfuscatedFileUrl ? (
-                  <Button
-                    onClick={() => onDownload(job.id)}
-                    disabled={isDownloading[job.id]}
-                    variant="outline"
-                    size="sm"
-                    className="border-2 border-black font-mono text-xs uppercase"
-                  >
-                    {isDownloading[job.id] ? (
-                      <>
-                        <Loader2 size={14} className="animate-spin mr-1" />
-                        Downloading
-                      </>
-                    ) : (
-                      <>
-                        <Download size={14} className="mr-1" />
-                        Download
-                      </>
-                    )}
-                  </Button>
+                  <div className="flex gap-2 justify-center">
+                    <Button
+                      onClick={() => navigate(`/job/${job.id}`)}
+                      variant="outline"
+                      size="sm"
+                      className="border-2 border-black font-mono text-xs uppercase"
+                    >
+                      Logs
+                    </Button>
+                    <Button
+                      onClick={() => onDownload(job.id)}
+                      disabled={isDownloading[job.id]}
+                      variant="outline"
+                      size="sm"
+                      className="border-2 border-black font-mono text-xs uppercase"
+                    >
+                      {isDownloading[job.id] ? (
+                        <>
+                          <Loader2 size={14} className="animate-spin mr-1" />
+                          DL
+                        </>
+                      ) : (
+                        <>
+                          <Download size={14} className="mr-1" />
+                          DL
+                        </>
+                      )}
+                    </Button>
+                  </div>
                 ) : job.status === 'failed' ? (
                   <span className="text-xs font-mono text-red-600 uppercase">Failed</span>
                 ) : (
