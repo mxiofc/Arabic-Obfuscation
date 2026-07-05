@@ -25,4 +25,25 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+export const obfuscationJobs = mysqlTable("obfuscation_jobs", {
+  id: int("id").autoincrement().primaryKey(),
+  userId: int("userId").notNull().references(() => users.id),
+  originalFileName: varchar("originalFileName", { length: 255 }).notNull(),
+  originalFileKey: varchar("originalFileKey", { length: 255 }).notNull(),
+  originalFileUrl: text("originalFileUrl").notNull(),
+  obfuscatedFileKey: varchar("obfuscatedFileKey", { length: 255 }),
+  obfuscatedFileUrl: text("obfuscatedFileUrl"),
+  status: mysqlEnum("status", ["pending", "processing", "completed", "failed"]).default("pending").notNull(),
+  currentStep: varchar("currentStep", { length: 128 }).default("queued"),
+  progress: int("progress").default(0),
+  obfuscateAssets: int("obfuscateAssets").default(1),
+  obfuscateDex: int("obfuscateDex").default(1),
+  obfuscateLib: int("obfuscateLib").default(1),
+  errorMessage: text("errorMessage"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  completedAt: timestamp("completedAt"),
+});
+
+export type ObfuscationJob = typeof obfuscationJobs.$inferSelect;
+export type InsertObfuscationJob = typeof obfuscationJobs.$inferInsert;

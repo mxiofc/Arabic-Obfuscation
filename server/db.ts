@@ -1,6 +1,6 @@
-import { eq } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users } from "../drizzle/schema";
+import { InsertUser, users, obfuscationJobs, ObfuscationJob, InsertObfuscationJob } from "../drizzle/schema";
 import { ENV } from './_core/env';
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -89,4 +89,69 @@ export async function getUserByOpenId(openId: string) {
   return result.length > 0 ? result[0] : undefined;
 }
 
-// TODO: add feature queries here as your schema grows.
+// Obfuscation job helpers
+
+export async function createObfuscationJob(job: InsertObfuscationJob): Promise<ObfuscationJob> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const result = await db.insert(obfuscationJobs).values(job);
+  const jobId = (result as any).insertId;
+
+  const created = await db.select().from(obfuscationJobs).where(eq(obfuscationJobs.id, jobId)).limit(1);
+  return created[0];
+}
+
+export async function getObfuscationJobById(jobId: number): Promise<ObfuscationJob | undefined> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get job: database not available");
+    return undefined;
+  }
+
+  const result = await db.select().from(obfuscationJobs).where(eq(obfuscationJobs.id, jobId)).limit(1);
+  return result.length > 0 ? result[0] : undefined;
+}
+
+export async function getUserObfuscationJobs(userId: number, limit: number = 50): Promise<ObfuscationJob[]> {
+  const db = await getDb();
+  if (!db) {
+    console.warn("[Database] Cannot get jobs: database not available");
+    return [];
+  }
+
+  return db
+    .select()
+    .from(obfuscationJobs)
+    .where(eq(obfuscationJobs.userId, userId))
+    .orderBy(desc(obfuscationJobs.createdAt))
+    .limit(limit);
+}
+
+export async function updateObfuscationJob(
+  jobId: number,
+  updates: Partial<ObfuscationJob>
+): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  const updateData: Record<string, unknown> = {
+    ...updates,
+    updatedAt: new Date(),
+  };
+
+  await db.update(obfuscationJobs).set(updateData).where(eq(obfuscationJobs.id, jobId));
+}
+
+export async function deleteObfuscationJob(jobId: number): Promise<void> {
+  const db = await getDb();
+  if (!db) {
+    throw new Error("Database not available");
+  }
+
+  await db.delete(obfuscationJobs).where(eq(obfuscationJobs.id, jobId));
+}
